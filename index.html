@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Be My Valentine? 💕</title>
+    <title>DOOM Clone</title>
     <style>
         * {
             margin: 0;
@@ -12,323 +12,416 @@
         }
 
         body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #fce4ec 0%, #ffcdd2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Arial', sans-serif;
+            background: #000;
             overflow: hidden;
-            padding: 20px;
+            font-family: 'Courier New', monospace;
         }
 
-        .envelope {
-            width: 100%;
-            max-width: 400px;
-            height: 280px;
-            background: #e57373;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            position: relative;
-            transition: opacity 1s;
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
 
-        .envelope.hidden {
-            opacity: 0;
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0000;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px #000;
+            display: flex;
+            gap: 40px;
+            font-weight: bold;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
             pointer-events: none;
         }
 
-        .envelope-flap {
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 140px;
-            background: #ef5350;
-            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            background: #0f0;
+            box-shadow: 0 0 4px #0f0;
         }
 
-        .envelope-heart {
+        #crosshair::before {
+            width: 2px;
+            height: 20px;
+            left: 9px;
+        }
+
+        #crosshair::after {
+            width: 20px;
+            height: 2px;
+            top: 9px;
+        }
+
+        #instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #0f0;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px #000;
+            line-height: 1.6;
+        }
+
+        #gameOver {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 48px;
-        }
-
-        .letter {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 12px;
-            padding: 30px 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, 100%);
-            opacity: 0;
-            transition: all 1s;
-        }
-
-        .letter.show {
-            transform: translate(-50%, -50%);
-            opacity: 1;
-        }
-
-        .letter-heart {
-            font-size: 48px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 24px;
-            line-height: 1.4;
-        }
-
-        .buttons-wrapper {
-            position: relative;
-            width: 100%;
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 16px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            width: 140px;
-            touch-action: manipulation;
-        }
-
-        .yes-btn {
-            background: #ef5350;
-            color: white;
-        }
-
-        .yes-btn:hover, .yes-btn:active {
-            background: #e53935;
-            transform: scale(1.05);
-        }
-
-        .no-btn {
-            background: #bdbdbd;
-            color: #666;
-        }
-
-        .no-btn:hover, .no-btn:active {
-            background: #9e9e9e;
-        }
-
-        .no-btn.moving {
-            position: absolute;
-            transition: all 0.3s ease;
-        }
-
-        .success {
+            color: #f00;
+            font-size: 64px;
+            text-shadow: 4px 4px 8px #000;
             display: none;
             text-align: center;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-            padding: 20px;
         }
 
-        .success.show {
+        #gameOver.show {
             display: block;
-        }
-
-        .success h1 {
-            font-size: 48px;
-            color: #e53935;
-            margin-bottom: 20px;
-            animation: bounce 1s infinite;
-        }
-
-        .success .emoji {
-            font-size: 80px;
-            animation: bounce 1s infinite;
-            margin-bottom: 15px;
-        }
-
-        .hearts {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            font-size: 50px;
-            margin-top: 20px;
-        }
-
-        .hearts span {
             animation: pulse 1s infinite;
         }
 
-        .hearts span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .hearts span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ff1744;
-            animation: fall 4s ease-in forwards;
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 20px;
-            }
-
-            .letter-heart {
-                font-size: 40px;
-            }
-
-            button {
-                padding: 14px 30px;
-                font-size: 16px;
-                width: 130px;
-            }
-
-            .success h1 {
-                font-size: 36px;
-            }
-
-            .success .emoji {
-                font-size: 60px;
-            }
-
-            .hearts {
-                font-size: 40px;
-                gap: 15px;
-            }
-
-            .envelope {
-                height: 200px;
-            }
-
-            .envelope-flap {
-                height: 100px;
-            }
-
-            .envelope-heart {
-                font-size: 36px;
-            }
-        }
-
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(720deg);
-                opacity: 0;
-            }
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
 <body>
-    <div class="envelope" id="envelope">
-        <div class="envelope-flap"></div>
-        <div class="envelope-heart">❤️</div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="crosshair"></div>
+    <div id="hud">
+        <div>HEALTH: <span id="health">100</span></div>
+        <div>AMMO: <span id="ammo">50</span></div>
+        <div>KILLS: <span id="kills">0</span></div>
     </div>
-
-    <div class="letter" id="letter">
-        <div class="letter-heart">💕</div>
-        <h1>will you be my Valentine?</h1>
-        <div class="buttons-wrapper">
-            <div class="buttons">
-                <button class="yes-btn" onclick="handleYes()">Yes! 💕</button>
-                <button class="no-btn" id="noBtn" onclick="handleNo()">No</button>
-            </div>
-        </div>
+    <div id="instructions">
+        WASD - Move | Mouse - Look | Click - Shoot | E - Open Doors
     </div>
-
-    <div class="success" id="success">
-        <div class="emoji">💕</div>
-        <h1>Yeahhhhhhhhhhh!</h1>
-        <div class="hearts">
-            <span>❤️</span>
-            <span>💕</span>
-            <span>❤️</span>
-        </div>
+    <div id="gameOver">
+        GAME OVER<br>
+        <div style="font-size: 24px; margin-top: 20px;">Press R to Restart</div>
     </div>
 
     <script>
-        setTimeout(() => {
-            document.getElementById('envelope').classList.add('hidden');
-            document.getElementById('letter').classList.add('show');
-        }, 500);
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-        function handleNo() {
-            const btn = document.getElementById('noBtn');
-            btn.classList.add('moving');
-            
-            // Random position in the container
-            const wrapper = document.querySelector('.buttons-wrapper');
-            const wrapperRect = wrapper.getBoundingClientRect();
-            
-            const x = Math.random() * (wrapperRect.width - 140);
-            const y = Math.random() * (wrapperRect.height - 60);
-            
-            btn.style.left = x + 'px';
-            btn.style.top = y + 'px';
-        }
+        // Game state
+        let player = {
+            x: 3.5,
+            y: 3.5,
+            angle: 0,
+            health: 100,
+            ammo: 50,
+            speed: 0.05,
+            rotSpeed: 0.03
+        };
 
-        function handleYes() {
-            document.getElementById('letter').style.display = 'none';
-            document.getElementById('success').classList.add('show');
+        let keys = {};
+        let mouseX = 0;
+        let kills = 0;
+        let gameOver = false;
+
+        // Map (1 = wall, 2 = door, 0 = empty)
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,1,1,1,2,1,1,0,0,1,1,0,0,1],
+            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
+            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
+            [1,0,0,2,0,0,0,0,2,0,0,2,0,0,0,1],
+            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
+            [1,0,0,1,1,1,2,1,1,0,0,1,1,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,1,1,0,0,0,0,1,1,1,0,0,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Enemies
+        let enemies = [
+            { x: 5.5, y: 5.5, health: 30, lastShot: 0, active: true },
+            { x: 10.5, y: 5.5, health: 30, lastShot: 0, active: true },
+            { x: 7.5, y: 10.5, health: 30, lastShot: 0, active: true },
+            { x: 12.5, y: 12.5, health: 30, lastShot: 0, active: true },
+            { x: 3.5, y: 10.5, health: 30, lastShot: 0, active: true }
+        ];
+
+        // Shooting
+        let shooting = false;
+        let shotTime = 0;
+
+        // Raycasting
+        function castRay(angle) {
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
             
-            // Create MORE confetti (300 pieces!)
-            const colors = ['#ff1744', '#f50057', '#ff4081', '#ff80ab', '#ffc0cb', '#e91e63', '#ec407a'];
-            for (let i = 0; i < 300; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti';
-                    confetti.style.left = Math.random() * 100 + '%';
-                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.style.animationDelay = Math.random() * 0.3 + 's';
-                    confetti.style.animationDuration = (3 + Math.random() * 2) + 's';
-                    document.body.appendChild(confetti);
-                    
-                    setTimeout(() => confetti.remove(), 5000);
-                }, i * 15);
+            let x = player.x;
+            let y = player.y;
+            
+            for (let i = 0; i < 20; i += 0.1) {
+                x += cos * 0.1;
+                y += sin * 0.1;
+                
+                const mapX = Math.floor(x);
+                const mapY = Math.floor(y);
+                
+                if (map[mapY] && map[mapY][mapX]) {
+                    return {
+                        distance: i,
+                        type: map[mapY][mapX],
+                        x: x,
+                        y: y
+                    };
+                }
             }
+            return { distance: 20, type: 0 };
         }
+
+        // Render 3D view
+        function render3D() {
+            const fov = Math.PI / 3;
+            const numRays = canvas.width / 2;
+            
+            // Sky and floor
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+            
+            // Cast rays
+            for (let i = 0; i < numRays; i++) {
+                const rayAngle = player.angle - fov / 2 + (i / numRays) * fov;
+                const ray = castRay(rayAngle);
+                
+                const distance = ray.distance * Math.cos(rayAngle - player.angle);
+                const wallHeight = (canvas.height / distance) * 0.5;
+                
+                let color;
+                if (ray.type === 1) {
+                    const shade = Math.max(50, 255 - distance * 30);
+                    color = `rgb(${shade}, ${shade * 0.5}, ${shade * 0.5})`;
+                } else if (ray.type === 2) {
+                    const shade = Math.max(50, 255 - distance * 30);
+                    color = `rgb(${shade * 0.7}, ${shade * 0.5}, ${shade * 0.3})`;
+                }
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(
+                    i * 2,
+                    canvas.height / 2 - wallHeight / 2,
+                    2,
+                    wallHeight
+                );
+            }
+            
+            // Render enemies
+            enemies.forEach(enemy => {
+                if (!enemy.active) return;
+                
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                let relativeAngle = angle - player.angle;
+                while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
+                while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
+                
+                if (Math.abs(relativeAngle) < fov / 2) {
+                    const size = (canvas.height / distance) * 0.3;
+                    const screenX = (relativeAngle / fov + 0.5) * canvas.width;
+                    
+                    // Draw demon sprite (simple red rectangle with horns)
+                    ctx.fillStyle = '#8b0000';
+                    ctx.fillRect(
+                        screenX - size / 2,
+                        canvas.height / 2 - size / 2,
+                        size,
+                        size
+                    );
+                    
+                    // Eyes
+                    ctx.fillStyle = '#ff0';
+                    ctx.fillRect(screenX - size * 0.2, canvas.height / 2 - size * 0.1, size * 0.15, size * 0.15);
+                    ctx.fillRect(screenX + size * 0.05, canvas.height / 2 - size * 0.1, size * 0.15, size * 0.15);
+                }
+            });
+        }
+
+        // Update game
+        function update() {
+            if (gameOver) return;
+            
+            // Movement
+            let moveX = 0;
+            let moveY = 0;
+            
+            if (keys['w']) {
+                moveX += Math.cos(player.angle) * player.speed;
+                moveY += Math.sin(player.angle) * player.speed;
+            }
+            if (keys['s']) {
+                moveX -= Math.cos(player.angle) * player.speed;
+                moveY -= Math.sin(player.angle) * player.speed;
+            }
+            if (keys['a']) {
+                moveX += Math.cos(player.angle - Math.PI / 2) * player.speed;
+                moveY += Math.sin(player.angle - Math.PI / 2) * player.speed;
+            }
+            if (keys['d']) {
+                moveX += Math.cos(player.angle + Math.PI / 2) * player.speed;
+                moveY += Math.sin(player.angle + Math.PI / 2) * player.speed;
+            }
+            
+            // Collision detection
+            const newX = player.x + moveX;
+            const newY = player.y + moveY;
+            
+            if (!map[Math.floor(newY)][Math.floor(newX)]) {
+                player.x = newX;
+                player.y = newY;
+            }
+            
+            // Open doors
+            if (keys['e']) {
+                const checkX = player.x + Math.cos(player.angle) * 0.5;
+                const checkY = player.y + Math.sin(player.angle) * 0.5;
+                const mapX = Math.floor(checkX);
+                const mapY = Math.floor(checkY);
+                
+                if (map[mapY] && map[mapY][mapX] === 2) {
+                    map[mapY][mapX] = 0;
+                }
+            }
+            
+            // Enemy AI
+            const now = Date.now();
+            enemies.forEach(enemy => {
+                if (!enemy.active) return;
+                
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Move towards player
+                if (distance > 1) {
+                    const moveSpeed = 0.02;
+                    enemy.x += (dx / distance) * moveSpeed;
+                    enemy.y += (dy / distance) * moveSpeed;
+                }
+                
+                // Shoot at player
+                if (distance < 5 && now - enemy.lastShot > 2000) {
+                    player.health -= 10;
+                    enemy.lastShot = now;
+                    
+                    if (player.health <= 0) {
+                        gameOver = true;
+                        document.getElementById('gameOver').classList.add('show');
+                    }
+                }
+            });
+            
+            // Update HUD
+            document.getElementById('health').textContent = Math.max(0, player.health);
+            document.getElementById('ammo').textContent = player.ammo;
+            document.getElementById('kills').textContent = kills;
+        }
+
+        // Shoot
+        function shoot() {
+            if (player.ammo <= 0 || gameOver) return;
+            
+            player.ammo--;
+            shooting = true;
+            shotTime = Date.now();
+            
+            // Check if hit enemy
+            enemies.forEach(enemy => {
+                if (!enemy.active) return;
+                
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                let relativeAngle = angle - player.angle;
+                while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
+                while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
+                
+                if (Math.abs(relativeAngle) < 0.1 && distance < 10) {
+                    enemy.health -= 20;
+                    if (enemy.health <= 0) {
+                        enemy.active = false;
+                        kills++;
+                    }
+                }
+            });
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            render3D();
+            
+            // Muzzle flash
+            if (shooting && Date.now() - shotTime < 100) {
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                shooting = false;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input handlers
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key.toLowerCase() === 'r' && gameOver) {
+                location.reload();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            const deltaX = e.movementX || 0;
+            player.angle += deltaX * 0.002;
+        });
+        
+        document.addEventListener('click', shoot);
+        
+        // Lock pointer
+        canvas.addEventListener('click', () => {
+            canvas.requestPointerLock();
+        });
+
+        // Start game
+        gameLoop();
     </script>
 </body>
 </html>
