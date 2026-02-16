@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOOM Clone</title>
+    <title>DOOM Clone - Enhanced</title>
     <style>
         * {
             margin: 0;
@@ -122,6 +122,85 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // Load enemy sprites as images
+        const enemySprites = {
+            zombie: new Image(),
+            bigDemon: new Image(),
+            flyingEye: new Image(),
+            boss: new Image()
+        };
+
+        // I'll create simple colored placeholders since I can't directly convert your images
+        // In a real implementation, you'd convert each image to base64 like this:
+        // enemySprites.zombie.src = 'data:image/png;base64,iVBORw0KG...'
+        
+        // For now, let's draw them programmatically
+        function createEnemySprite(type) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 64;
+            tempCanvas.height = 64;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            switch(type) {
+                case 'zombie':
+                    // Skeleton zombie
+                    tempCtx.fillStyle = '#d4c5a9';
+                    tempCtx.fillRect(20, 10, 24, 30); // body
+                    tempCtx.fillRect(24, 5, 16, 10); // head
+                    tempCtx.fillStyle = '#ff0000';
+                    tempCtx.fillRect(28, 8, 3, 3); // eye
+                    tempCtx.fillRect(35, 8, 3, 3); // eye
+                    tempCtx.fillStyle = '#8b4513';
+                    tempCtx.fillRect(42, 25, 8, 15); // weapon
+                    break;
+                case 'bigDemon':
+                    // Big red demon
+                    tempCtx.fillStyle = '#8b0000';
+                    tempCtx.fillRect(10, 15, 44, 40); // body
+                    tempCtx.fillRect(15, 8, 34, 15); // head
+                    tempCtx.fillStyle = '#ff0000';
+                    tempCtx.fillRect(22, 12, 6, 6); // eye
+                    tempCtx.fillRect(36, 12, 6, 6); // eye
+                    break;
+                case 'flyingEye':
+                    // Flying eye
+                    tempCtx.fillStyle = '#ffcccc';
+                    tempCtx.beginPath();
+                    tempCtx.arc(32, 32, 20, 0, Math.PI * 2);
+                    tempCtx.fill();
+                    tempCtx.fillStyle = '#ff8800';
+                    tempCtx.beginPath();
+                    tempCtx.arc(32, 32, 12, 0, Math.PI * 2);
+                    tempCtx.fill();
+                    tempCtx.fillStyle = '#000';
+                    tempCtx.fillRect(30, 28, 4, 8);
+                    // Wings
+                    tempCtx.fillStyle = '#888';
+                    tempCtx.fillRect(5, 25, 15, 8);
+                    tempCtx.fillRect(44, 25, 15, 8);
+                    break;
+                case 'boss':
+                    // Dragon boss
+                    tempCtx.fillStyle = '#a0a090';
+                    tempCtx.fillRect(15, 20, 34, 30); // body
+                    tempCtx.fillRect(20, 12, 24, 15); // head
+                    // Wings
+                    tempCtx.fillRect(2, 15, 18, 25);
+                    tempCtx.fillRect(44, 15, 18, 25);
+                    tempCtx.fillStyle = '#00ff00';
+                    tempCtx.fillRect(28, 16, 4, 4); // eye
+                    tempCtx.fillRect(34, 16, 4, 4); // eye
+                    break;
+            }
+            
+            return tempCanvas;
+        }
+
+        // Create sprite canvases
+        Object.keys(enemySprites).forEach(type => {
+            enemySprites[type] = createEnemySprite(type);
+        });
+
         // Game state
         let player = {
             x: 3.5,
@@ -138,33 +217,34 @@
         let kills = 0;
         let gameOver = false;
 
-        // Map (1 = wall, 2 = door, 0 = empty)
+        // Enhanced map with varied textures
         const map = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,1,1,1,2,1,1,0,0,1,1,0,0,1],
-            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
-            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
+            [1,0,0,3,3,3,2,3,3,0,0,1,1,0,0,1],
+            [1,0,0,3,0,0,0,0,3,0,0,1,0,0,0,1],
+            [1,0,0,3,0,0,0,0,3,0,0,1,0,0,0,1],
             [1,0,0,2,0,0,0,0,2,0,0,2,0,0,0,1],
-            [1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
-            [1,0,0,1,1,1,2,1,1,0,0,1,1,0,0,1],
+            [1,0,0,3,0,0,0,0,3,0,0,1,0,0,0,1],
+            [1,0,0,3,3,3,2,3,3,0,0,1,1,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,1,1,0,0,0,0,1,1,1,0,0,0,1],
-            [1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
-            [1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,0,4,4,0,0,0,0,4,4,4,0,0,0,1],
+            [1,0,0,4,0,0,0,0,0,0,0,4,0,0,0,1],
+            [1,0,0,4,0,0,0,0,0,0,0,4,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
-        // Enemies
+        // Enemy types with different behaviors
         let enemies = [
-            { x: 5.5, y: 5.5, health: 30, lastShot: 0, active: true },
-            { x: 10.5, y: 5.5, health: 30, lastShot: 0, active: true },
-            { x: 7.5, y: 10.5, health: 30, lastShot: 0, active: true },
-            { x: 12.5, y: 12.5, health: 30, lastShot: 0, active: true },
-            { x: 3.5, y: 10.5, health: 30, lastShot: 0, active: true }
+            { x: 5.5, y: 5.5, health: 20, type: 'zombie', speed: 0.03, damage: 5, lastShot: 0, active: true },
+            { x: 10.5, y: 5.5, health: 20, type: 'zombie', speed: 0.03, damage: 5, lastShot: 0, active: true },
+            { x: 7.5, y: 10.5, health: 50, type: 'bigDemon', speed: 0.015, damage: 15, lastShot: 0, active: true },
+            { x: 12.5, y: 12.5, health: 30, type: 'flyingEye', speed: 0.025, damage: 8, lastShot: 0, active: true },
+            { x: 3.5, y: 10.5, health: 20, type: 'zombie', speed: 0.03, damage: 5, lastShot: 0, active: true },
+            { x: 8, y: 8, health: 150, type: 'boss', speed: 0.01, damage: 25, lastShot: 0, active: true }
         ];
 
         // Shooting
@@ -203,13 +283,21 @@
             const fov = Math.PI / 3;
             const numRays = canvas.width / 2;
             
-            // Sky and floor
-            ctx.fillStyle = '#2a2a2a';
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / 2);
+            gradient.addColorStop(0, '#2a1a1a');
+            gradient.addColorStop(1, '#4a2a2a');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-            ctx.fillStyle = '#1a1a1a';
+            
+            // Floor with lava effect
+            const floorGrad = ctx.createLinearGradient(0, canvas.height / 2, 0, canvas.height);
+            floorGrad.addColorStop(0, '#3a1a1a');
+            floorGrad.addColorStop(1, '#5a0a0a');
+            ctx.fillStyle = floorGrad;
             ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
             
-            // Cast rays
+            // Cast rays for walls
             for (let i = 0; i < numRays; i++) {
                 const rayAngle = player.angle - fov / 2 + (i / numRays) * fov;
                 const ray = castRay(rayAngle);
@@ -218,12 +306,21 @@
                 const wallHeight = (canvas.height / distance) * 0.5;
                 
                 let color;
-                if (ray.type === 1) {
-                    const shade = Math.max(50, 255 - distance * 30);
-                    color = `rgb(${shade}, ${shade * 0.5}, ${shade * 0.5})`;
-                } else if (ray.type === 2) {
-                    const shade = Math.max(50, 255 - distance * 30);
-                    color = `rgb(${shade * 0.7}, ${shade * 0.5}, ${shade * 0.3})`;
+                const shade = Math.max(30, 255 - distance * 35);
+                
+                switch(ray.type) {
+                    case 1: // Stone wall
+                        color = `rgb(${shade * 0.6}, ${shade * 0.6}, ${shade * 0.6})`;
+                        break;
+                    case 2: // Door
+                        color = `rgb(${shade * 0.5}, ${shade * 0.3}, ${shade * 0.2})`;
+                        break;
+                    case 3: // Brick wall
+                        color = `rgb(${shade * 0.7}, ${shade * 0.3}, ${shade * 0.2})`;
+                        break;
+                    case 4: // Metal wall
+                        color = `rgb(${shade * 0.4}, ${shade * 0.4}, ${shade * 0.5})`;
+                        break;
                 }
                 
                 ctx.fillStyle = color;
@@ -233,38 +330,50 @@
                     2,
                     wallHeight
                 );
+                
+                // Add vertical lines for texture
+                if (i % 4 === 0) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                    ctx.fillRect(i * 2, canvas.height / 2 - wallHeight / 2, 1, wallHeight);
+                }
             }
             
-            // Render enemies
-            enemies.forEach(enemy => {
-                if (!enemy.active) return;
-                
+            // Render enemies with sprites
+            const sortedEnemies = enemies
+                .filter(e => e.active)
+                .map(enemy => {
+                    const dx = enemy.x - player.x;
+                    const dy = enemy.y - player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    return { enemy, distance };
+                })
+                .sort((a, b) => b.distance - a.distance);
+
+            sortedEnemies.forEach(({ enemy, distance }) => {
                 const dx = enemy.x - player.x;
                 const dy = enemy.y - player.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
                 const angle = Math.atan2(dy, dx);
                 
                 let relativeAngle = angle - player.angle;
                 while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
                 while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
                 
-                if (Math.abs(relativeAngle) < fov / 2) {
-                    const size = (canvas.height / distance) * 0.3;
+                if (Math.abs(relativeAngle) < fov / 2 + 0.5) {
+                    const size = (canvas.height / distance) * 0.4;
                     const screenX = (relativeAngle / fov + 0.5) * canvas.width;
                     
-                    // Draw demon sprite (simple red rectangle with horns)
-                    ctx.fillStyle = '#8b0000';
-                    ctx.fillRect(
-                        screenX - size / 2,
-                        canvas.height / 2 - size / 2,
-                        size,
-                        size
-                    );
-                    
-                    // Eyes
-                    ctx.fillStyle = '#ff0';
-                    ctx.fillRect(screenX - size * 0.2, canvas.height / 2 - size * 0.1, size * 0.15, size * 0.15);
-                    ctx.fillRect(screenX + size * 0.05, canvas.height / 2 - size * 0.1, size * 0.15, size * 0.15);
+                    // Draw enemy sprite
+                    const sprite = enemySprites[enemy.type];
+                    if (sprite) {
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.drawImage(
+                            sprite,
+                            screenX - size / 2,
+                            canvas.height / 2 - size / 2,
+                            size,
+                            size
+                        );
+                    }
                 }
             });
         }
@@ -325,15 +434,18 @@
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 // Move towards player
-                if (distance > 1) {
-                    const moveSpeed = 0.02;
-                    enemy.x += (dx / distance) * moveSpeed;
-                    enemy.y += (dy / distance) * moveSpeed;
+                if (distance > 1.5) {
+                    enemy.x += (dx / distance) * enemy.speed;
+                    enemy.y += (dy / distance) * enemy.speed;
                 }
                 
                 // Shoot at player
-                if (distance < 5 && now - enemy.lastShot > 2000) {
-                    player.health -= 10;
+                let shootDelay = 2000;
+                if (enemy.type === 'boss') shootDelay = 1500;
+                if (enemy.type === 'zombie') shootDelay = 2500;
+                
+                if (distance < 6 && now - enemy.lastShot > shootDelay) {
+                    player.health -= enemy.damage;
                     enemy.lastShot = now;
                     
                     if (player.health <= 0) {
@@ -370,8 +482,11 @@
                 while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
                 while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
                 
-                if (Math.abs(relativeAngle) < 0.1 && distance < 10) {
-                    enemy.health -= 20;
+                if (Math.abs(relativeAngle) < 0.15 && distance < 12) {
+                    let damage = 20;
+                    if (enemy.type === 'boss') damage = 10;
+                    
+                    enemy.health -= damage;
                     if (enemy.health <= 0) {
                         enemy.active = false;
                         kills++;
@@ -387,7 +502,7 @@
             
             // Muzzle flash
             if (shooting && Date.now() - shotTime < 100) {
-                ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.fillStyle = 'rgba(255, 255, 100, 0.3)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
                 shooting = false;
@@ -418,6 +533,12 @@
         // Lock pointer
         canvas.addEventListener('click', () => {
             canvas.requestPointerLock();
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         });
 
         // Start game
